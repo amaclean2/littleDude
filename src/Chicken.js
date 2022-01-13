@@ -1,43 +1,49 @@
-import { createRef, useEffect, useRef, useState } from "react";
-import { useAnimations } from "@react-three/drei";
-import { useLoader } from "@react-three/fiber";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { useEffect, useMemo, useRef } from "react";
+import { useAnimations, useGLTF } from "@react-three/drei";
+import { useFrame, useGraph } from "@react-three/fiber";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils";
 import chickenModel from "./models/chicken.gltf";
+import { Vector3 } from "three";
 
-const Chicken = ({ initPos = [-4, 5], count = 3 }) => {
-  const { nodes, materials, animations } = useLoader(
-    GLTFLoader,
-    chickenModel
-  );
-  const [chickenRefs, setChickenRefs] = useState([]);
+const Chicken = (props) => {
+  const chickenGroup = useRef();
+  const { scene, materials, animations } = useGLTF(chickenModel);
+  const chickenClone = useMemo(() => clone(scene), [scene]);
+  const { nodes } = useGraph(chickenClone);
+  const { actions } = useAnimations(animations, chickenGroup);
+
+  useFrame((state, delta) => {
+    // chickenGroup.current.translateZ(-0.02);
+  });
 
   useEffect(() => {
-    if (chickenRefs?.length) {
-      console.log("BOK BOK", chickenRefs);
+    actions.Hunt?.play();
+    return actions.Hunt?.reset()
+  }, []);
 
-      if (chickenRefs?.length >= count) {
-        return;
-      }
+  useEffect(() => {
+    const directionInterval = setInterval(
+      () =>
+        chickenGroup.current.lookAt(
+          new Vector3(
+            Math.floor(
+              Math.random() * (Math.round(Math.random()) ? 2500 : -2500)
+            ),
+            -2.5,
+            Math.floor(
+              Math.random() * (Math.round(Math.random()) ? 2500 : -2500)
+            )
+          )
+        ),
+      1000 * Math.floor(Math.random() * 120)
+    );
 
-      const newChicken = clone(chickenRefs[0].current);
-      const newChickenRef = createRef();
-      newChickenRef.current = newChicken;
-      console.log("NEW_CHICKEN", newChicken);
-      setChickenRefs([...chickenRefs, newChickenRef]);
-    } else {
-      setChickenRefs([createRef()])
-    }
-  }, [chickenRefs]);
+    return () => clearInterval(directionInterval);
+  }, []);
 
-  const chickenJSX = (chickenRef, idx) => {
-    return <group
-      ref={chickenRef}
-      position={[initPos[0] + idx * 3, 0, initPos[1] + idx * 3]}
-      dispose={null}
-      key={`chicken_${idx}`}
-    >
-      <group position={[0, 0.5, 0]} scale={[0.5, 0.5, 0.5]}>
+  return (
+    <group ref={chickenGroup} {...props} dispose={null}>
+      <group position={[0, 2.95, 0]} scale={[0.5, 0.5, 0.5]}>
         <primitive object={nodes.Body} />
         <primitive object={nodes.Bottom} />
         <primitive object={nodes.LegIKL} />
@@ -65,14 +71,10 @@ const Chicken = ({ initPos = [-4, 5], count = 3 }) => {
           skeleton={nodes.Plane_3.skeleton}
         />
       </group>
-    </group>;
-  };
-
-  return <>
-    {
-      chickenRefs?.map((chickenRef, idx) => chickenJSX(chickenRef, idx))
-    }
-  </>;
+    </group>
+  );
 };
+
+useGLTF.preload(chickenModel);
 
 export default Chicken;

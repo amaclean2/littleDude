@@ -24,9 +24,9 @@ const App = () => {
               <ControllerInput />
               <fog attach="fog" args={["white", 100, 200]} />
               <LittleDude />
-              <Chicken />
-              {/* <Tree position={[-10, 24, -10]}/>
-              <Tree position={[12, 14.5, 25]} scale={[6, 6, 6]} rotation={[-3.13, 10, 3.08]} /> */}
+              <Chickens />
+              <Tree position={[-10, 24, -10]}/>
+              <Tree position={[12, 14.5, 25]} scale={[6, 6, 6]} rotation={[-3.13, 10, 3.08]} />
               <Ground />
               <OrbitControls />
               <Environment preset={"dawn"} background />
