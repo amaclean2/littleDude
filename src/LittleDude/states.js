@@ -5,15 +5,15 @@ export const useIdleState = (actions) => {
     return {
         output: 3,
         setIdle: (prevState) => {
-            if (prevState && prevState !== 'Resting') {
-                actions.Resting.enabled = true;
-                actions.Resting.crossFadeFrom(actions[prevState], 0.5, true);
-                actions.Resting.play();
+            if (prevState && prevState !== 'resting') {
+                actions.resting.enabled = true;
+                actions.resting.crossFadeFrom(actions[prevState], 0.5, true);
+                actions.resting.play();
             } else if (!prevState) {
-                actions.Resting.play();
+                actions.resting.play();
             }
 
-            return 'Resting';
+            return 'resting';
         }
     }
 }

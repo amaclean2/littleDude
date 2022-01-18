@@ -78,9 +78,9 @@ export const LittleDude = (props) => {
         <primitive object={nodes.LegPullTargetR} />
         <primitive object={nodes.Center} />
         <skinnedMesh
-          geometry={nodes.LittleDude.geometry}
+          geometry={nodes.Cube.geometry}
           material={materials["Material.001"]}
-          skeleton={nodes.LittleDude.skeleton}
+          skeleton={nodes.Cube.skeleton}
         />
       </group>
     </group>
