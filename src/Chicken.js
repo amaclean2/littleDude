@@ -3,7 +3,8 @@ import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useGraph } from "@react-three/fiber";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils";
 import chickenModel from "./models/chicken.gltf";
-import { Vector3 } from "three";
+import { Quaternion, Vector3 } from "three";
+import { useWalkState } from "./LittleDude";
 
 const Chicken = (props) => {
   const chickenGroup = useRef();
@@ -12,38 +13,45 @@ const Chicken = (props) => {
   const { nodes } = useGraph(chickenClone);
   const { actions } = useAnimations(animations, chickenGroup);
 
+  const TURN_SPEED = 0.002;
+  const WALK_SPEED = 0.008;
+
+  const quat = new Quaternion();
+  const axis = new Vector3(0, 1, 0);
+  const velocity = new Vector3(0, 0, WALK_SPEED);
+
   useFrame((state, delta) => {
-    // chickenGroup.current.translateZ(-0.02);
+	if (props.move) {
+		const chickenTurnOffset = (Math.floor(Math.random() * 10) - 5) / 10000;
+		const chickenTurn = chickenTurnOffset + TURN_SPEED;
+		quat.setFromAxisAngle(axis, Math.PI * chickenTurn * (props.direction ? 1 : -1));
+		chickenGroup.current.quaternion.multiply(quat);
+
+		const forward = new Vector3(0, 0, 1);
+		forward.applyQuaternion(chickenGroup.current.quaternion);
+		forward.normalize();
+
+		const sideways = new Vector3(1, 0, 0);
+		sideways.applyQuaternion(chickenGroup.current.quaternion);
+		sideways.normalize();
+
+		forward.multiplyScalar(velocity.z);
+		sideways.multiplyScalar(velocity.x);
+
+		chickenGroup.current.position.add(forward);
+		chickenGroup.current.position.add(sideways);
+	}
   });
 
   useEffect(() => {
-    actions.Hunt?.play();
-    return actions.Hunt?.reset()
-  }, []);
+	actions[(props.move) ? "Hunt" : "Hop"]?.play();
+    return actions[(props.move) ? "Hunt" : "Hop"]?.reset();
 
-  useEffect(() => {
-    const directionInterval = setInterval(
-      () =>
-        chickenGroup.current.lookAt(
-          new Vector3(
-            Math.floor(
-              Math.random() * (Math.round(Math.random()) ? 2500 : -2500)
-            ),
-            -2.5,
-            Math.floor(
-              Math.random() * (Math.round(Math.random()) ? 2500 : -2500)
-            )
-          )
-        ),
-      1000 * Math.floor(Math.random() * 120)
-    );
-
-    return () => clearInterval(directionInterval);
   }, []);
 
   return (
     <group ref={chickenGroup} {...props} dispose={null}>
-      <group position={[0, 2.95, 0]} scale={[0.5, 0.5, 0.5]}>
+      <group position={[0, 2.98, 0]} scale={[0.5, 0.5, 0.5]}>
         <primitive object={nodes.Body} />
         <primitive object={nodes.Bottom} />
         <primitive object={nodes.LegIKL} />
